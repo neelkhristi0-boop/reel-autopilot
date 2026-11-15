@@ -1,1 +1,227 @@
-{"pages": {}, "reels": [], "planned": [], "needs": [], "updated": null, "stats_at": null}
+{
+ "pages": {
+  "insider-story": {
+   "name": "The Insider Story",
+   "instagram": "the_insiderstory",
+   "enabled": true,
+   "times": [
+    "09:30",
+    "19:30"
+   ],
+   "accent": "#f59e0b",
+   "mode": "explainer",
+   "target": 1000000,
+   "needs": []
+  },
+  "prospect-engitech": {
+   "name": "Prospect Engitech",
+   "instagram": "prospectengitech",
+   "enabled": true,
+   "times": [
+    "12:30"
+   ],
+   "accent": "#3b82f6",
+   "mode": "explainer",
+   "target": null,
+   "needs": []
+  },
+  "explain-lab": {
+   "name": "The Explain Lab",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "06:30",
+    "20:30"
+   ],
+   "accent": "#22c55e",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "india-media": {
+   "name": "India media page",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "08:00",
+    "13:00",
+    "21:00"
+   ],
+   "accent": "#ef4444",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "tech-ai": {
+   "name": "Tech and AI",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "10:00",
+    "20:00"
+   ],
+   "accent": "#06b6d4",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "cricket": {
+   "name": "Cricket stories",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "08:30",
+    "18:30"
+   ],
+   "accent": "#16a34a",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "history": {
+   "name": "History and mysteries",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "07:30",
+    "21:00"
+   ],
+   "accent": "#d97706",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "space": {
+   "name": "Space and science",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "11:30",
+    "22:00"
+   ],
+   "accent": "#8b5cf6",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "money": {
+   "name": "Money facts",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "09:00",
+    "19:00"
+   ],
+   "accent": "#eab308",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "new-page": {
+   "name": "New page (template)",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "18:00"
+   ],
+   "accent": "#a855f7",
+   "mode": "explainer",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml"
+   ]
+  },
+  "clips-page": {
+   "name": "Clips page (template)",
+   "instagram": "",
+   "enabled": false,
+   "times": [
+    "11:00",
+    "17:00",
+    "21:30"
+   ],
+   "accent": "#22c55e",
+   "mode": "clips",
+   "target": null,
+   "needs": [
+    "Instagram handle in pages.yaml",
+    "Set enabled: true in pages.yaml",
+    "Google Drive folder link (drive_folder) in pages.yaml"
+   ]
+  }
+ },
+ "reels": [
+  {
+   "id": "insider-story_2026-11-15_manual-083920",
+   "slot": "insider-story|2026-11-15|manual-083920",
+   "page": "insider-story",
+   "status": "made",
+   "created": "2026-11-15T03:09:20Z",
+   "title": "The 10 Micron Price",
+   "error": "",
+   "topic": "Why a 10 micron tolerance costs more",
+   "sources": [
+    "built-in self-test script"
+   ],
+   "trending_items": 28,
+   "hook": "Why does one tiny number on a drawing triple the price of a part?",
+   "photos": 8,
+   "seconds": 41.99,
+   "voice": "edge"
+  }
+ ],
+ "planned": [
+  {
+   "page": "insider-story",
+   "at": "2026-11-15T04:00:00Z"
+  },
+  {
+   "page": "prospect-engitech",
+   "at": "2026-11-15T07:00:00Z"
+  },
+  {
+   "page": "insider-story",
+   "at": "2026-11-15T14:00:00Z"
+  },
+  {
+   "page": "insider-story",
+   "at": "2026-11-16T04:00:00Z"
+  },
+  {
+   "page": "prospect-engitech",
+   "at": "2026-11-16T07:00:00Z"
+  },
+  {
+   "page": "insider-story",
+   "at": "2026-11-16T14:00:00Z"
+  }
+ ],
+ "needs": [
+  "Add the GEMINI_API_KEY secret in the GitHub repo settings",
+  "Add the META_TOKEN secret in the GitHub repo settings"
+ ],
+ "updated": "2026-11-15T03:11:58Z",
+ "stats_at": null
+}
