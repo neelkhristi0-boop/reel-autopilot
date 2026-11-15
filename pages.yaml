@@ -1,0 +1,106 @@
+# Reel Autopilot — one block per Instagram page.
+# To switch a page on: fill in `instagram` (the handle, no @) and set enabled: true.
+# Times are India time (24h). One reel is made and posted for every time listed.
+
+timezone: Asia/Kolkata
+
+pages:
+  - id: insider-story
+    name: The Insider Story
+    instagram: the_insiderstory
+    enabled: true
+    language: English
+    voice: en-IN-PrabhatNeural
+    accent: "#f59e0b"
+    times: ["09:30", "19:30"]
+    niche: >
+      Business stories and insider facts about famous Indian and global companies and founders
+      (how they started, the one decision that changed everything, collapses, comebacks).
+    news_queries: ["Indian startup business", "company founder story India"]
+    news_region: IN
+    evergreen:
+      - How Amul beat every multinational with a co-operative
+      - Why Byju's fell from 22 billion dollars
+      - How Jio made data almost free
+      - How Zerodha grew without raising money
+      - Why Kingfisher Airlines collapsed
+      - How Maggi came back after the ban
+      - How Royal Enfield was saved from shutting down
+      - The Tata Nano mistake
+
+  - id: prospect-engitech
+    name: Prospect Engitech
+    instagram: prospectengitech
+    enabled: true
+    language: English
+    voice: en-IN-PrabhatNeural
+    accent: "#3b82f6"
+    times: ["12:30"]
+    niche: >
+      CNC machining explained simply for engineers and buyers: turning, VMC milling, tolerances,
+      materials, tooling, surface finish, how parts are made. Page of a CNC job shop in Vadodara, India.
+      Never invent claims about the company itself.
+    news_queries: []
+    news_region: IN
+    use_trends: false
+    evergreen:
+      - Why a tolerance of 10 microns costs so much more
+      - Turning versus milling, when to use which
+      - Why titanium is hard to machine
+      - What a 4-axis VMC can do that a 3-axis cannot
+      - Why coolant matters in CNC machining
+      - How tool nose radius changes surface finish
+      - Why stainless steel work-hardens while cutting
+      - What G-code actually tells the machine
+      - Why aluminium 6061 is the most machined metal
+      - How a job shop checks a part, from vernier to CMM
+
+  - id: explain-lab
+    name: The Explain Lab
+    instagram: ""          # add the Instagram handle, then set enabled: true
+    enabled: false
+    language: English
+    voice: en-US-GuyNeural
+    accent: "#22c55e"
+    times: ["06:30", "20:30"]   # evening and morning in the USA
+    niche: >
+      Curious "how does this actually work" explainers for a US audience: everyday science,
+      engineering, money and history, taught like an excited teacher.
+    news_queries: ["science discovery explained", "how it works engineering"]
+    news_region: US
+    evergreen:
+      - Why planes fly at 35,000 feet
+      - How a QR code survives being torn
+      - Why the US uses 120 volts
+      - How noise-cancelling headphones delete sound
+      - Why bridges have gaps in them
+      - How GPS knows where you are
+
+  - id: india-media
+    name: India media page
+    instagram: ""          # name not chosen yet; add the handle when the page exists
+    enabled: false
+    language: Hinglish (Hindi written in Roman letters mixed with English)
+    voice: hi-IN-MadhurNeural
+    accent: "#ef4444"
+    times: ["08:00", "13:00", "21:00"]
+    niche: >
+      What India is talking about today, in the style of Pubity or Daily Loud: one trending
+      story explained fast with the key numbers. No politics-bashing, no rumours.
+    news_queries: ["India trending today"]
+    news_region: IN
+    use_trends: true
+    evergreen: []
+
+  - id: new-page
+    name: New page (template)
+    instagram: ""
+    enabled: false
+    language: English
+    voice: en-IN-NeerjaNeural
+    accent: "#a855f7"
+    times: ["18:00"]
+    niche: Describe the niche here in one or two sentences.
+    news_queries: []
+    news_region: IN
+    evergreen: []

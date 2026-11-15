@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reel Autopilot</title>
+<style>
+  :root { --bg:#0c0d10; --card:#16181d; --line:#262a33; --ink:#f1f3f6; --dim:#8b93a3; --green:#34d399; --red:#f87171; --amber:#fbbf24; --blue:#60a5fa; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
+  header { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+  h1 { font-size:22px; margin:0; letter-spacing:-.3px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:1.5px; color:var(--dim); margin:28px 0 10px; font-weight:600; }
+  .dim { color:var(--dim); font-size:13px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .tile, .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .tile b { display:block; font-size:30px; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
+  .tile span { color:var(--dim); font-size:13px; }
+  .up { color:var(--green); } .down { color:var(--red); }
+  .alert { background:#2a2111; border:1px solid #5c4513; color:var(--amber); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .alert ul { margin:6px 0 0; padding-left:18px; }
+  .pages { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; }
+  .card h3 { margin:0 0 2px; font-size:16px; display:flex; align-items:center; gap:8px; }
+  .dot { width:10px; height:10px; border-radius:50%; flex:none; }
+  .pill { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; padding:2px 8px; border-radius:99px; border:1px solid currentColor; }
+  .on { color:var(--green); } .off { color:var(--dim); } .bad { color:var(--red); } .wait { color:var(--amber); } .info { color:var(--blue); }
+  .row { display:flex; justify-content:space-between; gap:10px; margin-top:8px; font-variant-numeric:tabular-nums; }
+  .needs { margin:8px 0 0; padding-left:18px; color:var(--amber); font-size:13px; }
+  .board { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:start; }
+  .col > div.head { font-weight:700; margin-bottom:8px; display:flex; justify-content:space-between; }
+  .item { border-top:1px solid var(--line); padding:9px 0; }
+  .item .t { font-weight:600; overflow-wrap:anywhere; }
+  .item a { color:var(--blue); text-decoration:none; }
+  .err { color:var(--red); font-size:12.5px; overflow-wrap:anywhere; }
+  .empty { color:var(--dim); font-size:13px; padding:9px 0; border-top:1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Reel Autopilot</h1><span class="dim" id="updated">Loading…</span></header>
+  <div id="alerts"></div>
+  <div class="tiles" id="tiles"></div>
+  <h2>Pages</h2>
+  <div class="pages" id="pages"></div>
+  <h2>Reels</h2>
+  <div class="board" id="board"></div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const num = (n) => n == null ? "–" : n >= 1e7 ? (n / 1e7).toFixed(1) + " Cr" : n >= 1e5 ? (n / 1e5).toFixed(1) + " L" : n >= 1e3 ? (n / 1e3).toFixed(1) + "K" : String(n);
+const when = (s) => s ? new Date(s).toLocaleString("en-IN", {day: "numeric", month: "short", hour: "numeric", minute: "2-digit"}) : "";
+const ago = (s) => { if (!s) return "never"; const m = Math.round((Date.now() - new Date(s)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
+
+function render(s) {
+  const pages = s.pages || {}, reels = (s.reels || []).slice().reverse();
+  $("updated").textContent = "Updated " + ago(s.updated);
+
+  const alerts = $("alerts"); alerts.replaceChildren();
+  if ((s.needs || []).length) {
+    const a = el("div", "alert", "Inputs needed before it can run:");
+    const ul = el("ul"); s.needs.forEach((n) => ul.append(el("li", "", n))); a.append(ul); alerts.append(a);
+  }
+
+  const live = Object.values(pages).filter((p) => p.enabled);
+  const views = live.reduce((t, p) => t + (p.views7 || 0), 0), prev = live.reduce((t, p) => t + (p.prev7 || 0), 0);
+  const weekAgo = Date.now() - 7 * 864e5;
+  const posted7 = reels.filter((r) => r.status === "posted" && new Date(r.posted) > weekAgo).length;
+  const change = prev ? Math.round(((views - prev) / prev) * 100) : null;
+  const tiles = $("tiles"); tiles.replaceChildren();
+  const tile = (big, label, cls) => { const t = el("div", "tile"); t.append(el("b", cls, big), el("span", "", label)); tiles.append(t); };
+  tile(num(views), "views, last 7 days");
+  tile(String(posted7), "reels posted, last 7 days");
+  tile(change == null ? "–" : (change >= 0 ? "+" : "") + change + "%", "vs the week before", change == null ? "" : change >= 0 ? "up" : "down");
+  tile(live.length + " / " + Object.keys(pages).length, "pages running");
+
+  const pg = $("pages"); pg.replaceChildren();
+  Object.entries(pages).forEach(([id, p]) => {
+    const c = el("div", "card"), h = el("h3");
+    const dot = el("span", "dot"); dot.style.background = p.accent || "#60a5fa";
+    h.append(dot, el("span", "", p.name || id)); c.append(h);
+    c.append(el("div", "dim", p.instagram ? "@" + p.instagram : "no Instagram handle yet"));
+    const r1 = el("div", "row"); r1.append(el("span", "pill " + (p.enabled ? (p.error ? "bad" : "on") : "off"), p.enabled ? (p.error ? "error" : "running") : "off"), el("span", "dim", (p.times || []).join(" · "))); c.append(r1);
+    if (p.enabled) { const r2 = el("div", "row"); r2.append(el("span", "", num(p.followers) + " followers"), el("span", "", num(p.views7) + " views / 7d")); c.append(r2); }
+    if (p.error) c.append(el("div", "err", p.error));
+    if ((p.needs || []).length) { const ul = el("ul", "needs"); [...new Set(p.needs)].forEach((n) => ul.append(el("li", "", n))); c.append(ul); }
+    pg.append(c);
+  });
+
+  const name = (id) => (pages[id] || {}).name || id;
+  const col = (title, cls, items, draw) => {
+    const c = el("div", "card col"), head = el("div", "head");
+    head.append(el("span", cls, title), el("span", "dim", String(items.length))); c.append(head);
+    if (!items.length) c.append(el("div", "empty", "Nothing here"));
+    items.slice(0, 15).forEach((i) => c.append(draw(i)));
+    return c;
+  };
+  const reelItem = (r) => {
+    const d = el("div", "item");
+    d.append(el("div", "t", r.title || r.topic || "(no title yet)"));
+    const meta = el("div", "dim", name(r.page) + " · " + when(r.posted || r.created) + (r.views != null ? " · " + num(r.views) + " views" : ""));
+    d.append(meta);
+    if (r.permalink) { const a = el("a", "", "Open on Instagram"); a.href = r.permalink; a.target = "_blank"; a.rel = "noopener"; d.append(a); }
+    if (r.error) d.append(el("div", "err", r.error));
+    return d;
+  };
+  const board = $("board"); board.replaceChildren(
+    col("Planned", "info", s.planned || [], (p) => { const d = el("div", "item"); d.append(el("div", "t", name(p.page)), el("div", "dim", when(p.at))); return d; }),
+    col("Being made", "wait", reels.filter((r) => ["researching", "scripting", "voicing", "rendering", "posting", "made"].includes(r.status)), reelItem),
+    col("Posted", "on", reels.filter((r) => r.status === "posted"), reelItem),
+    col("Needs attention", "bad", reels.filter((r) => ["failed", "needs_input"].includes(r.status)), reelItem)
+  );
+}
+
+fetch("data/state.json?" + Date.now()).then((r) => r.json()).then(render).catch(() => { $("updated").textContent = "Could not load data yet"; });
+</script>
+</body>
+</html>

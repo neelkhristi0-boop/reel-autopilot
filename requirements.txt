@@ -1,0 +1,5 @@
+edge-tts>=7.0
+gTTS>=2.5
+feedparser>=6.0
+PyYAML>=6.0
+requests>=2.31
