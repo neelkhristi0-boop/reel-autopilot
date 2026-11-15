@@ -6,3 +6,4 @@ composer/props.json
 *.pyc
 .env
 composer/public/clip.mp4
+composer/public/img_*

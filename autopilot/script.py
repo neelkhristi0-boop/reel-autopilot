@@ -31,6 +31,9 @@ Pick ONE topic and write one reel. Rules:
 - One idea per beat. Plain words. The last beat is the payoff, not "follow for more".
 - Every fact, number, name and date must be true and checkable. Use search to verify. If you are not sure of a number, leave it out.
 - No medical, legal or investment advice. No insults, no rumours about real people, nothing hateful or political point-scoring.
+- Each beat gets ONE photo search query ("image"): 3 to 7 words naming a real, specific, photographable thing that the beat is about
+  (the actual product, building, machine, place, logo, event or named person), specific enough that a web image search returns the right picture.
+  Never abstract ideas ("success", "growth"). Use a different query for every beat.
 - Each beat gets ONE scene shown while it is spoken. Scene text is SHORT on-screen text (not the sentence repeated), in the same language as the voice-over. Vary the scene types; use "number" or "compare" whenever the beat has a number.
 
 Scene types (use exactly these shapes):
@@ -45,7 +48,7 @@ Reply with ONLY a JSON object, no other text:
 {{
  "topic": "the topic in under 10 words",
  "title": "cover title, max 6 words",
- "beats": [{{"say": "spoken sentence", "key": "the one most important word in that sentence, exactly as written", "scene": {{...}}}}],
+ "beats": [{{"say": "spoken sentence", "image": "photo search query", "key": "the one most important word in that sentence, exactly as written", "scene": {{...}}}}],
  "caption": "Instagram caption, 2 to 3 short lines, ends with a question to drive comments",
  "hashtags": ["8 to 12 relevant hashtags without #"],
  "sources": ["URL or publication name for the main facts"]
@@ -119,7 +122,7 @@ def validate(d):
     for b in d.get("beats", []):
         say = _s(b.get("say"), 240)
         if say:
-            beats.append({"say": say, "key": _s(b.get("key"), 30), "scene": clean_scene(b.get("scene"), say)})
+            beats.append({"say": say, "key": _s(b.get("key"), 30), "image": _s(b.get("image"), 80), "scene": clean_scene(b.get("scene"), say)})
     words = sum(len(b["say"].split()) for b in beats)
     if not (5 <= len(beats) <= 14) or not (50 <= words <= 170):
         raise ValueError(f"script out of range: {len(beats)} beats, {words} words")
@@ -137,14 +140,14 @@ def validate(d):
 SAMPLE = {"topic": "Why a 10 micron tolerance costs more", "title": "The 10 Micron Price",
  "caption": "Tight tolerance, big bill.\nWhat is the tightest tolerance you have asked for?", "hashtags": ["cnc", "machining", "engineering"], "sources": ["built-in self-test script"],
  "beats": [
-  {"say": "Why does one tiny number on a drawing triple the price of a part?", "key": "triple", "scene": {"type": "title", "kicker": "CNC pricing", "text": "One tiny number"}},
-  {"say": "A human hair is about seventy microns thick.", "key": "seventy", "scene": {"type": "number", "value": 70, "suffix": "µm", "label": "one human hair"}},
-  {"say": "A normal machined part is held to fifty microns, a precision part to ten.", "key": "ten", "scene": {"type": "compare", "a": {"label": "Normal part", "value": 50}, "b": {"label": "Precision part", "value": 10}, "unit": "µm"}},
-  {"say": "To hit ten, the shop needs slower cuts, fresh tools and a stable temperature.", "key": "slower", "scene": {"type": "list", "heading": "What it takes", "items": ["Slower cuts", "Fresh tools", "Stable temperature"]}},
-  {"say": "Steel grows about eleven microns per metre for every degree it warms.", "key": "eleven", "scene": {"type": "number", "value": 11, "suffix": "µm", "label": "growth per metre, per degree"}},
-  {"say": "So heat alone can eat the whole tolerance.", "key": "heat", "scene": {"type": "statement", "text": "Heat alone can eat the whole tolerance", "highlight": "whole tolerance"}},
-  {"say": "The part is roughed, then finished, then measured, and every step adds time.", "key": "measured", "scene": {"type": "timeline", "points": [{"label": "1", "text": "Rough cut"}, {"label": "2", "text": "Finish cut"}, {"label": "3", "text": "Measure every part"}]}},
-  {"say": "So ask for a tight tolerance only where two parts actually meet.", "key": "meet", "scene": {"type": "statement", "text": "Tight only where parts meet", "highlight": "where parts meet"}},
+  {"say": "Why does one tiny number on a drawing triple the price of a part?", "image": "engineering drawing tolerance dimension", "key": "triple", "scene": {"type": "title", "kicker": "CNC pricing", "text": "One tiny number"}},
+  {"say": "A human hair is about seventy microns thick.", "image": "human hair under microscope", "key": "seventy", "scene": {"type": "number", "value": 70, "suffix": "µm", "label": "one human hair"}},
+  {"say": "A normal machined part is held to fifty microns, a precision part to ten.", "image": "CNC machined steel parts", "key": "ten", "scene": {"type": "compare", "a": {"label": "Normal part", "value": 50}, "b": {"label": "Precision part", "value": 10}, "unit": "µm"}},
+  {"say": "To hit ten, the shop needs slower cuts, fresh tools and a stable temperature.", "image": "CNC lathe cutting metal coolant", "key": "slower", "scene": {"type": "list", "heading": "What it takes", "items": ["Slower cuts", "Fresh tools", "Stable temperature"]}},
+  {"say": "Steel grows about eleven microns per metre for every degree it warms.", "image": "steel bar in workshop", "key": "eleven", "scene": {"type": "number", "value": 11, "suffix": "µm", "label": "growth per metre, per degree"}},
+  {"say": "So heat alone can eat the whole tolerance.", "image": "thermometer in machine shop", "key": "heat", "scene": {"type": "statement", "text": "Heat alone can eat the whole tolerance", "highlight": "whole tolerance"}},
+  {"say": "The part is roughed, then finished, then measured, and every step adds time.", "image": "CMM coordinate measuring machine", "key": "measured", "scene": {"type": "timeline", "points": [{"label": "1", "text": "Rough cut"}, {"label": "2", "text": "Finish cut"}, {"label": "3", "text": "Measure every part"}]}},
+  {"say": "So ask for a tight tolerance only where two parts actually meet.", "image": "precision shaft and bearing fit", "key": "meet", "scene": {"type": "statement", "text": "Tight only where parts meet", "highlight": "where parts meet"}},
  ]}
 
 

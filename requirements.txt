@@ -6,3 +6,5 @@ PyYAML>=6.0
 requests>=2.31
 faster-whisper>=1.1
 gdown>=5.2
+ddgs>=9.0
+Pillow>=10.0

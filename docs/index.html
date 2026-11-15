@@ -113,7 +113,7 @@ function render(s) {
   };
   const board = $("board"); board.replaceChildren(
     col("Planned", "info", s.planned || [], (p) => { const d = el("div", "item"); d.append(el("div", "t", name(p.page)), el("div", "dim", when(p.at))); return d; }),
-    col("Being made", "wait", reels.filter((r) => ["researching", "scripting", "downloading", "transcribing", "voicing", "rendering", "posting", "made"].includes(r.status)), reelItem),
+    col("Being made", "wait", reels.filter((r) => ["researching", "scripting", "downloading", "transcribing", "finding photos", "voicing", "rendering", "posting", "made"].includes(r.status)), reelItem),
     col("Posted", "on", reels.filter((r) => r.status === "posted"), reelItem),
     col("Needs attention", "bad", reels.filter((r) => ["failed", "needs_input"].includes(r.status)), reelItem)
   );

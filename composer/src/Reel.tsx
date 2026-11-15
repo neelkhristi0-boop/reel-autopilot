@@ -1,7 +1,7 @@
 // Word Reel engine, data-driven version. The voice is the clock:
 // every scene starts on the first word of its beat, captions follow word times.
 import React from "react";
-import {AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
+import {AbsoluteFill, Audio, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
 
 export type Word = {word: string; start: number; end: number};
 export type Scene =
@@ -11,7 +11,7 @@ export type Scene =
   | {type: "list"; heading?: string; items: string[]}
   | {type: "statement"; text: string; highlight?: string}
   | {type: "timeline"; points: {label: string; text: string}[]};
-export type Beat = {start: number; scene: Scene; key?: string};
+export type Beat = {start: number; scene: Scene; key?: string; image?: string | null};
 export type ReelProps = {words: Word[]; beats: Beat[]; audio: string; accent: string; handle: string; duration: number};
 
 const W = 1080;
@@ -131,6 +131,29 @@ const Timeline: React.FC<SP & {s: Extract<Scene, {type: "timeline"}>}> = ({t, le
   );
 };
 
+// A real photo for the beat: sharp in a window, a blurred copy of itself behind, always slowly moving.
+const PHOTO_TOP = 330, PHOTO_H = 920;
+const Photo: React.FC<{src: string; t: number; len: number; flip: boolean; dim: number; label?: string; accent: string}> = ({src, t, len, flip, dim, label, accent}) => {
+  const r = Math.min(1, t / Math.max(len, 2.5));
+  const fade = Math.min(1, t / 0.18);
+  const lp = useIn(t, 0.15);
+  return (
+    <AbsoluteFill style={{opacity: fade}}>
+      <Img src={staticFile(src.replace(".jpg", "_bg.jpg"))} style={{position: "absolute", width: "100%", height: "100%", objectFit: "cover"}} />
+      <div style={{position: "absolute", top: PHOTO_TOP, left: 0, width: W, height: PHOTO_H, overflow: "hidden"}}>
+        <Img src={staticFile(src)} style={{width: "100%", height: "100%", objectFit: "cover", transform: `scale(${1.05 + 0.1 * r}) translateX(${(flip ? -1 : 1) * (r - 0.5) * 36}px)`}} />
+        <div style={{position: "absolute", inset: 0, background: dim ? `rgba(0,0,0,${dim})` : "linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 55%, rgba(0,0,0,.85) 100%)"}} />
+        {label ? (
+          <div style={{position: "absolute", left: 50, right: 50, bottom: 46, fontSize: fit(label, 84, 54, 14, 70), fontWeight: 800, lineHeight: 1.12, letterSpacing: -1, opacity: lp, transform: `translateY(${(1 - lp) * 24}px)`, textShadow: "0 3px 18px rgba(0,0,0,.8)"}}>
+            <div style={{width: 110 * lp, height: 9, background: accent, borderRadius: 5, marginBottom: 20}} />
+            {label}
+          </div>
+        ) : null}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 const SceneView: React.FC<SP & {scene: Scene}> = ({scene, ...sp}) => {
   switch (scene.type) {
     case "number": return <NumberScene {...sp} s={scene} />;
@@ -163,7 +186,7 @@ const Captions: React.FC<{words: Word[]; beats: Beat[]; accent: string; t: numbe
   words.forEach((w, i) => { if (w.start <= t) cur = i; });
   const phrase = phrases.find((p) => p.includes(cur)) ?? [];
   return (
-    <div style={{position: "absolute", top: 200, width: W, textAlign: "center", fontSize: 68, letterSpacing: -1, lineHeight: 1.3, padding: "0 50px", boxSizing: "border-box"}}>
+    <div style={{position: "absolute", top: 190, width: W, textAlign: "center", textShadow: "0 2px 12px rgba(0,0,0,.9)", fontSize: 68, letterSpacing: -1, lineHeight: 1.3, padding: "0 50px", boxSizing: "border-box"}}>
       {phrase.filter((i) => i <= cur).map((i) => {
         const boxed = keyIdx.has(i);
         return (
@@ -185,12 +208,19 @@ export const Reel: React.FC<ReelProps> = ({words, beats, audio, accent, handle, 
   const bt = t - starts[idx];
   const len = (idx + 1 < starts.length ? starts[idx + 1] : duration) - starts[idx];
   const drift = 1 + 0.035 * Math.min(1, bt / 6); // nothing ever holds still
+  const sc = beats[idx].scene;
+  const img = beats[idx].image || null;
+  const textOnly = sc.type === "title" || sc.type === "statement"; // with a photo these become a label on the picture
+  const label = sc.type === "title" || sc.type === "statement" ? sc.text : "";
   return (
     <AbsoluteFill style={{background: "#000", color: "#fff", fontFamily: FONT}}>
       <AbsoluteFill style={{opacity: 0.1, backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "90px 90px", backgroundPosition: `0 ${-(frame * 0.4) % 90}px`}} />
-      <div style={{position: "absolute", top: 400, left: 0, width: W, height: 1000, display: "flex", alignItems: "center", justifyContent: "center", transform: `scale(${drift})`}}>
-        <SceneView key={idx} scene={beats[idx].scene} t={bt} len={len} accent={accent} />
-      </div>
+      {img ? <Photo key={`p${idx}`} src={img} t={bt} len={len} flip={idx % 2 === 1} dim={textOnly ? 0 : 0.62} label={textOnly ? label : undefined} accent={accent} /> : null}
+      {img && textOnly ? null : (
+        <div style={{position: "absolute", top: img ? PHOTO_TOP : 400, left: 0, width: W, height: img ? PHOTO_H : 1000, display: "flex", alignItems: "center", justifyContent: "center", transform: `scale(${img ? 0.86 * drift : drift})`}}>
+          <SceneView key={idx} scene={beats[idx].scene} t={bt} len={len} accent={accent} />
+        </div>
+      )}
       <Captions words={words} beats={beats} accent={accent} t={t} />
       <div style={{position: "absolute", top: 1430, width: W, textAlign: "center", fontSize: 34, fontWeight: 600, letterSpacing: 3, opacity: 0.45}}>{handle}</div>
       <div style={{position: "absolute", top: 0, left: 0, height: 8, width: W * Math.min(1, t / duration), background: accent}} />

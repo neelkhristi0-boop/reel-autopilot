@@ -7,7 +7,7 @@ Every 30 minutes GitHub wakes it up. If a page has a reel due, it:
 1. **Researches** what is trending for that page (Google News and Google Trends feeds, plus the page's evergreen list)
 2. **Writes** a 35–50 second script and picks a scene for each sentence (Gemini, with search to check facts)
 3. **Speaks** it and records when each word is said (Edge neural voices, free)
-4. **Draws** the reel, 1080x1920, captions following every word (Word Reel engine on Remotion)
+4. **Finds a real photo** for every sentence by searching the whole web, then draws the reel around the photos, 1080x1920, with captions following every word and animated numbers and charts on top
 5. **Posts** it through Instagram's official API
 6. **Tracks** views and followers, shown on the dashboard
 
@@ -71,5 +71,6 @@ Voices: any Edge voice name, e.g. `en-IN-PrabhatNeural`, `en-IN-NeerjaNeural`, `
   Use **test** mode for a new page until you trust its output.
 - Voice order: Edge neural voice, then an offline backup voice (English), then a plain Google voice. The dashboard run summary shows which one was used.
 - Clipping only works on videos you have the right to post. Reposting other creators' videos gets pages struck or removed.
+- Photos come from a whole-web image search, so most are someone's copyright. Watermarked stock sites are skipped, but a rights holder can still report a reel and Instagram can remove it or strike the page. Add `photos: false` to a page to go back to text-only reels.
 - YouTube Shorts upload is not included: Google locks API uploads to private until the app passes its API audit.
 - Scheduled runs can start 5–20 minutes late; that is normal for GitHub.

@@ -33,7 +33,7 @@ pages:
 from tests import fake_services  # noqa: E402
 
 srv, base = fake_services.start()
-os.environ.update({"GRAPH_BASE": base, "GEMINI_BASE": base, "NEWS_BASE": base})
+os.environ.update({"GRAPH_BASE": base, "GEMINI_BASE": base, "NEWS_BASE": base, "COMMONS_BASE": base, "IMAGE_ENGINES": "commons"})
 
 from autopilot import instagram, research, run, script, voice  # noqa: E402
 from autopilot.common import OUT, load_config, load_state, save_state  # noqa: E402
@@ -78,6 +78,9 @@ check("length is 25-60 s", 25 <= d <= 60, f"{d:.1f}s")
 check("video has an audible voice", has_audio and mean > -40, f"mean volume {mean} dB, engine {r.get('voice')}")
 up = fake_services.LOG["uploads"][-1]
 check("upload sent the whole mp4 with the right headers", up["ok"] and up["mp4"] and up["bytes"] == mp4.stat().st_size, f"{up['bytes']} bytes")
+check("a photo was found for every sentence, skipping bad results", r.get("photos") == len(script.SAMPLE["beats"]) and len(set(fake_services.LOG["image_queries"])) == r["photos"], f"{r.get('photos')} photos")
+beats = json.loads((ROOT / "composer" / "props.json").read_text())["beats"]
+check("photos reach the video", all(b["image"] and (ROOT / "composer" / "public" / b["image"]).stat().st_size > 20000 for b in beats))
 check("caption carries hashtags", "#cnc" in fake_services.LOG["captions"][-1])
 check("script prompt includes the trending items", "Example Times" in fake_services.LOG["prompts"][0])
 check("same slot is not made twice", slot not in [s for _, s in run.due_slots(cfg, state)])

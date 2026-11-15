@@ -106,7 +106,7 @@ def make(beats, voice, workdir, out_audio):
         timed = _speak(b["say"], voice, raw)
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-ar", "44100", "-ac", "1", str(wav)], check=True)
         d = _dur(wav)
-        rbeats.append({"start": len(words), "scene": b["scene"], "key": b.get("key", "")})
+        rbeats.append({"start": len(words), "scene": b["scene"], "key": b.get("key", ""), "image": b.get("image_file")})
         if timed:
             words += [{"word": w["word"], "start": round(t + w["start"], 3), "end": round(t + min(w["end"], d), 3)} for w in timed]
         else:

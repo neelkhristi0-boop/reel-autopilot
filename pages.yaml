@@ -93,6 +93,95 @@ pages:
     use_trends: true
     evergreen: []
 
+  # ---- Ready-made niches. Create the Instagram page, add its handle, set enabled: true. ----
+
+  - id: tech-ai
+    name: Tech and AI
+    instagram: ""
+    enabled: false
+    language: English
+    voice: en-IN-NeerjaNeural
+    accent: "#06b6d4"
+    times: ["10:00", "20:00"]
+    niche: >
+      New gadgets, apps and AI tools explained in plain words: what launched, what it does, why it matters.
+    news_queries: ["AI launch", "new smartphone launch India", "tech news today"]
+    news_region: IN
+    evergreen:
+      - How ChatGPT actually predicts the next word
+      - Why phone batteries die after two years
+      - How UPI moves money in seconds
+
+  - id: cricket
+    name: Cricket stories
+    instagram: ""
+    enabled: false
+    language: Hinglish (Hindi written in Roman letters mixed with English)
+    voice: hi-IN-MadhurNeural
+    accent: "#16a34a"
+    times: ["08:30", "18:30"]
+    niche: >
+      Cricket: today's match talking points, records, and legendary moments retold with the real numbers.
+    news_queries: ["cricket India match", "IPL news"]
+    news_region: IN
+    evergreen:
+      - The 1983 World Cup final nobody expected India to win
+      - How Dhoni finished the 2011 final
+      - Why the Duckworth-Lewis method exists
+
+  - id: history
+    name: History and mysteries
+    instagram: ""
+    enabled: false
+    language: English
+    voice: en-GB-RyanNeural
+    accent: "#d97706"
+    times: ["07:30", "21:00"]
+    niche: >
+      True stories from history that sound unbelievable: lost cities, strange decisions, inventions, heists. Only documented facts.
+    news_queries: ["archaeology discovery"]
+    news_region: US
+    evergreen:
+      - The iron pillar of Delhi that does not rust
+      - How the Kohinoor left India
+      - The man who sold the Eiffel Tower twice
+      - Why the Library of Alexandria really disappeared
+
+  - id: space
+    name: Space and science
+    instagram: ""
+    enabled: false
+    language: English
+    voice: en-US-GuyNeural
+    accent: "#8b5cf6"
+    times: ["11:30", "22:00"]
+    niche: >
+      Space missions, planets and mind-bending science, explained with real scale and numbers. ISRO and NASA news welcome.
+    news_queries: ["ISRO mission", "NASA discovery", "space telescope image"]
+    news_region: IN
+    evergreen:
+      - How Chandrayaan-3 landed for less than a film budget
+      - Why Voyager is still talking after 47 years
+      - How big the Sun really is
+
+  - id: money
+    name: Money facts
+    instagram: ""
+    enabled: false
+    language: Hinglish (Hindi written in Roman letters mixed with English)
+    voice: hi-IN-SwaraNeural
+    accent: "#eab308"
+    times: ["09:00", "19:00"]
+    niche: >
+      How money works in India, explained simply: banks, UPI, inflation, taxes, famous scams and how they worked.
+      Education only: never tell people what to buy, sell or invest in.
+    news_queries: ["RBI announcement", "India economy news"]
+    news_region: IN
+    evergreen:
+      - How compound interest doubles money
+      - Why the rupee falls against the dollar
+      - How the Harshad Mehta scam worked
+
   - id: new-page
     name: New page (template)
     instagram: ""

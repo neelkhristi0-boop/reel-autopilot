@@ -8,6 +8,27 @@ from urllib.parse import parse_qs, urlparse
 
 from autopilot.script import SAMPLE
 
+
+def _jpeg(seed, w=1600, h=1000):
+    """A photo-like test picture (sky, hills, a sun), different for every seed."""
+    import io
+    import random
+    from PIL import Image, ImageDraw, ImageFilter
+    rnd = random.Random(seed)
+    top, bot = [rnd.randint(20, 120) for _ in range(3)], [rnd.randint(140, 255) for _ in range(3)]
+    im = Image.new("RGB", (w, h))
+    d = ImageDraw.Draw(im)
+    for y in range(h):
+        d.line([(0, y), (w, y)], fill=tuple(int(top[k] + (bot[k] - top[k]) * y / h) for k in range(3)))
+    d.ellipse([w * .62, h * .12, w * .62 + h * .22, h * .34], fill=(255, 236, 170))
+    for k in range(3):
+        base = h * (.55 + .13 * k)
+        pts = [(0, h)] + [(x, base - rnd.randint(0, int(h * .18))) for x in range(0, w + 1, w // 8)] + [(w, h)]
+        d.polygon(pts, fill=tuple(max(0, c - 60 * (k + 1)) for c in bot))
+    buf = io.BytesIO()
+    im.filter(ImageFilter.GaussianBlur(1.2)).save(buf, "JPEG", quality=85)
+    return buf.getvalue()
+
 LOG = {"uploads": [], "published": [], "captions": [], "prompts": [], "polls": 0}
 RSS = """<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
 <item><title>Indian startup raises funds after turnaround - Example Times</title><link>https://example.com/a</link><description>Summary one</description><source url="https://example.com">Example Times</source></item>
@@ -33,6 +54,21 @@ class H(BaseHTTPRequestHandler):
         path = u.path
         if path.startswith("/rss/"):
             return self._send(RSS, ctype="application/rss+xml")
+        if path == "/w/api.php":  # Wikimedia Commons search: first hit is too small and must be skipped
+            LOG.setdefault("image_queries", []).append(q["gsrsearch"][0])
+            n = len(LOG["image_queries"])
+            b = f"http://127.0.0.1:{self.server.server_port}/img"
+            return self._send({"query": {"pages": {
+                "1": {"index": 1, "imageinfo": [{"mime": "image/jpeg", "thumburl": f"{b}/tiny.jpg"}]},
+                "2": {"index": 2, "imageinfo": [{"mime": "image/svg+xml", "url": f"{b}/logo.svg"}]},
+                "3": {"index": 3, "imageinfo": [{"mime": "image/jpeg", "thumburl": f"{b}/{n}.jpg"}]}}}})
+        if path.startswith("/img/"):
+            body = _jpeg(path, 200, 120) if "tiny" in path else _jpeg(path)
+            self.send_response(200)
+            self.send_header("Content-Type", "image/jpeg")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            return self.wfile.write(body)
         if q.get("access_token", [""])[0] not in ("USER_TOKEN", "PAGE_TOKEN"):
             return self._send({"error": {"message": "Invalid OAuth access token"}}, 400)
         if path.endswith("/me/accounts"):

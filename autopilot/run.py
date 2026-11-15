@@ -11,7 +11,7 @@ import shutil
 import traceback
 from datetime import datetime, timedelta
 
-from . import clips, instagram, research, script, voice
+from . import clips, images, instagram, research, script, voice
 from .common import COMPOSER, OUT, env, iso, load_config, load_state, now_utc, save_state
 from .render import render
 
@@ -121,6 +121,8 @@ def make_one(page, slot, state, dry_run):
             s = script.write(page, items, history, learned)
             rec.update({"title": s["title"], "topic": s["topic"], "sources": s["sources"], "trending_items": len(items), "hook": s["beats"][0]["say"]})
             print(f"[{page['id']}] topic: {s['topic']} ({len(items)} trending items read)")
+            rec["status"] = "finding photos"
+            rec["photos"] = images.for_beats(s["beats"], COMPOSER / "public") if page.get("photos", True) else 0
             rec["status"] = "voicing"
             words, beats, duration = voice.make(s["beats"], page.get("voice", "en-IN-PrabhatNeural"), OUT / f"{rid}_work", COMPOSER / "public" / "voice.mp3")
             rec.update({"status": "rendering", "seconds": duration, "voice": "+".join(sorted(voice.used))})
