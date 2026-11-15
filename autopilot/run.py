@@ -169,6 +169,9 @@ def main():
         if stale and env("META_TOKEN"):
             refresh_stats(cfg, state)
         save_state(state)
+        if slots and not (env("GEMINI_API_KEY") and env("META_TOKEN")):
+            print("reels are due, but the keys are not added yet: waiting")  # scheduled runs stay quiet until setup is finished
+            slots = []
         print(f"due: {[s for _, s in slots]}")
         if os.environ.get("GITHUB_OUTPUT"):
             with open(os.environ["GITHUB_OUTPUT"], "a") as f:
