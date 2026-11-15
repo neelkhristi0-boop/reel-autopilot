@@ -11,6 +11,15 @@ Every 30 minutes GitHub wakes it up. If a page has a reel due, it:
 5. **Posts** it through Instagram's official API
 6. **Tracks** views and followers, shown on the dashboard
 
+Two kinds of page:
+
+- **Explainer pages** (default): it researches a topic and makes an original animated reel with a voice-over.
+- **Clipping pages** (`mode: clips`): you give a Google Drive folder of long videos you own or have permission to use.
+  It transcribes them, picks the strongest 20-45 second moment, adds a hook title and word-by-word captions, and never reuses a part.
+
+Every day it reads each page's view counts and tells the script writer which hooks won and which lost,
+so the next reels copy the winners. Set `target_views` on a page to see progress toward a 30-day goal on the dashboard.
+
 ## One-time setup
 
 ### 1. Two secrets
@@ -37,10 +46,16 @@ Each Instagram page must be a **Business or Creator** account and be **connected
 Repo → Settings → Pages → Source: **Deploy from a branch** → Branch `main`, folder `/docs`.
 The dashboard is then at `https://<your-username>.github.io/<repo-name>/`.
 
-### 4. First test
-Actions → Reel Autopilot → Run workflow → mode **test**, pick a page.
-It makes one reel without posting. Download it from the run's "Artifacts" and watch it.
-When you are happy, do nothing more: the schedule posts by itself.
+### 4. First tests
+Actions → Reel Autopilot → Run workflow:
+
+1. **selftest** needs no keys. It runs 22 checks on every part (research, script, voice, render, upload, stats,
+   learning, clipping) against stand-in services, then makes one real reel with the live news feed and live voice.
+2. **test** (after adding `GEMINI_API_KEY`) makes one real reel for the page you pick, without posting.
+   Download it from the run's "Artifacts" and watch it.
+3. **post-now** (after adding `META_TOKEN`) makes and posts one reel immediately.
+
+After that do nothing: the schedule posts by itself.
 
 ## Changing things
 
@@ -54,5 +69,7 @@ Voices: any Edge voice name, e.g. `en-IN-PrabhatNeural`, `en-IN-NeerjaNeural`, `
 - Instagram allows about 50 API posts per account per day; this is far below that.
 - Facts are checked by the script model with search, but nobody reviews a reel before it posts.
   Use **test** mode for a new page until you trust its output.
-- If the Edge voice service is unreachable it falls back to a plainer Google voice for that reel.
+- Voice order: Edge neural voice, then an offline backup voice (English), then a plain Google voice. The dashboard run summary shows which one was used.
+- Clipping only works on videos you have the right to post. Reposting other creators' videos gets pages struck or removed.
+- YouTube Shorts upload is not included: Google locks API uploads to private until the app passes its API audit.
 - Scheduled runs can start 5–20 minutes late; that is normal for GitHub.

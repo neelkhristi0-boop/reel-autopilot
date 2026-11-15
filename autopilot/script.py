@@ -6,7 +6,7 @@ import requests
 
 from .common import env
 
-API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+API = "{base}/v1beta/models/{model}:generateContent"   # GEMINI_BASE is only changed by the tests
 
 PROMPT = """You write short faceless explainer reels for the Instagram page "{name}".
 
@@ -21,6 +21,9 @@ EVERGREEN TOPIC IDEAS (use one of these if nothing trending fits):
 
 ALREADY POSTED (never repeat these topics):
 {history}
+
+WHAT THE NUMBERS SAY ABOUT THIS PAGE (learn from it: write hooks and pick topics like the winners, avoid the pattern of the losers):
+{learned}
 
 Pick ONE topic and write one reel. Rules:
 - 8 to 11 beats. A beat is one short spoken sentence (6 to 16 words). Total 85 to 130 words (35 to 50 seconds).
@@ -54,7 +57,7 @@ def _call(prompt, search=True):
     body = {"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.9}}
     if search:
         body["tools"] = [{"google_search": {}}]
-    r = requests.post(API.format(model=model), headers={"x-goog-api-key": env("GEMINI_API_KEY")}, json=body, timeout=180)
+    r = requests.post(API.format(base=env("GEMINI_BASE", "https://generativelanguage.googleapis.com"), model=model), headers={"x-goog-api-key": env("GEMINI_API_KEY")}, json=body, timeout=180)
     if r.status_code != 200:
         raise RuntimeError(f"Gemini {r.status_code}: {r.text[:300]}")
     cand = r.json()["candidates"][0]
@@ -131,12 +134,30 @@ def validate(d):
     }
 
 
-def write(page, items, history):
+SAMPLE = {"topic": "Why a 10 micron tolerance costs more", "title": "The 10 Micron Price",
+ "caption": "Tight tolerance, big bill.\nWhat is the tightest tolerance you have asked for?", "hashtags": ["cnc", "machining", "engineering"], "sources": ["built-in self-test script"],
+ "beats": [
+  {"say": "Why does one tiny number on a drawing triple the price of a part?", "key": "triple", "scene": {"type": "title", "kicker": "CNC pricing", "text": "One tiny number"}},
+  {"say": "A human hair is about seventy microns thick.", "key": "seventy", "scene": {"type": "number", "value": 70, "suffix": "µm", "label": "one human hair"}},
+  {"say": "A normal machined part is held to fifty microns, a precision part to ten.", "key": "ten", "scene": {"type": "compare", "a": {"label": "Normal part", "value": 50}, "b": {"label": "Precision part", "value": 10}, "unit": "µm"}},
+  {"say": "To hit ten, the shop needs slower cuts, fresh tools and a stable temperature.", "key": "slower", "scene": {"type": "list", "heading": "What it takes", "items": ["Slower cuts", "Fresh tools", "Stable temperature"]}},
+  {"say": "Steel grows about eleven microns per metre for every degree it warms.", "key": "eleven", "scene": {"type": "number", "value": 11, "suffix": "µm", "label": "growth per metre, per degree"}},
+  {"say": "So heat alone can eat the whole tolerance.", "key": "heat", "scene": {"type": "statement", "text": "Heat alone can eat the whole tolerance", "highlight": "whole tolerance"}},
+  {"say": "The part is roughed, then finished, then measured, and every step adds time.", "key": "measured", "scene": {"type": "timeline", "points": [{"label": "1", "text": "Rough cut"}, {"label": "2", "text": "Finish cut"}, {"label": "3", "text": "Measure every part"}]}},
+  {"say": "So ask for a tight tolerance only where two parts actually meet.", "key": "meet", "scene": {"type": "statement", "text": "Tight only where parts meet", "highlight": "where parts meet"}},
+ ]}
+
+
+def write(page, items, history, learned=""):
+    if env("AUTOPILOT_SELFTEST") and not env("GEMINI_API_KEY"):
+        print("  self-test without a Gemini key: using the built-in sample script")
+        return validate(SAMPLE)
     prompt = PROMPT.format(
         name=page["name"], niche=" ".join(page["niche"].split()), language=page.get("language", "English"),
         items="\n".join(f"- {i['title']} ({i['source']}) {i['summary']}" for i in items) or "(none)",
         evergreen="\n".join(f"- {t}" for t in page.get("evergreen") or []) or "(none)",
         history="\n".join(f"- {h}" for h in history[-60:]) or "(nothing yet)",
+        learned=learned or "(no data yet)",
     )
     last = None
     for attempt, search in enumerate([True, True, False]):

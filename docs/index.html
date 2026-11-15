@@ -26,6 +26,7 @@
   .pill { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; padding:2px 8px; border-radius:99px; border:1px solid currentColor; }
   .on { color:var(--green); } .off { color:var(--dim); } .bad { color:var(--red); } .wait { color:var(--amber); } .info { color:var(--blue); }
   .row { display:flex; justify-content:space-between; gap:10px; margin-top:8px; font-variant-numeric:tabular-nums; }
+  .goal { margin-top:10px; } .bar { height:8px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:5px; } .bar i { display:block; height:100%; }
   .needs { margin:8px 0 0; padding-left:18px; color:var(--amber); font-size:13px; }
   .board { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:start; }
   .col > div.head { font-weight:700; margin-bottom:8px; display:flex; justify-content:space-between; }
@@ -83,6 +84,11 @@ function render(s) {
     c.append(el("div", "dim", p.instagram ? "@" + p.instagram : "no Instagram handle yet"));
     const r1 = el("div", "row"); r1.append(el("span", "pill " + (p.enabled ? (p.error ? "bad" : "on") : "off"), p.enabled ? (p.error ? "error" : "running") : "off"), el("span", "dim", (p.times || []).join(" · "))); c.append(r1);
     if (p.enabled) { const r2 = el("div", "row"); r2.append(el("span", "", num(p.followers) + " followers"), el("span", "", num(p.views7) + " views / 7d")); c.append(r2); }
+    if (p.enabled && p.target) {
+      const pct = Math.min(100, Math.round(((p.views30 || 0) / p.target) * 100));
+      const bar = el("div", "bar"), fill = el("i"); fill.style.width = pct + "%"; fill.style.background = p.accent || "#60a5fa"; bar.append(fill);
+      c.append(el("div", "dim goal", "30-day goal: " + num(p.views30 || 0) + " of " + num(p.target) + " views (" + pct + "%)"), bar);
+    }
     if (p.error) c.append(el("div", "err", p.error));
     if ((p.needs || []).length) { const ul = el("ul", "needs"); [...new Set(p.needs)].forEach((n) => ul.append(el("li", "", n))); c.append(ul); }
     pg.append(c);
@@ -107,7 +113,7 @@ function render(s) {
   };
   const board = $("board"); board.replaceChildren(
     col("Planned", "info", s.planned || [], (p) => { const d = el("div", "item"); d.append(el("div", "t", name(p.page)), el("div", "dim", when(p.at))); return d; }),
-    col("Being made", "wait", reels.filter((r) => ["researching", "scripting", "voicing", "rendering", "posting", "made"].includes(r.status)), reelItem),
+    col("Being made", "wait", reels.filter((r) => ["researching", "scripting", "downloading", "transcribing", "voicing", "rendering", "posting", "made"].includes(r.status)), reelItem),
     col("Posted", "on", reels.filter((r) => r.status === "posted"), reelItem),
     col("Needs attention", "bad", reels.filter((r) => ["failed", "needs_input"].includes(r.status)), reelItem)
   );

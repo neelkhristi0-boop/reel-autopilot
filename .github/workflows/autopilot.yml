@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "auto = post what is due | test = make one reel, do not post | post-now = make and post one now"
+        description: "selftest = check every part, no keys needed | test = make one reel, do not post | post-now = make and post one now | auto = post what is due"
         type: choice
-        default: test
-        options: [auto, test, post-now]
+        default: selftest
+        options: [selftest, test, post-now, auto]
       page:
         description: "Page id from pages.yaml (needed for test and post-now)"
         default: insider-story
@@ -63,10 +63,15 @@ jobs:
         if: steps.check.outputs.due == 'true'
         run: |
           case "$MODE" in
+            selftest) python tests/test_e2e.py && AUTOPILOT_SELFTEST=1 python -m autopilot.run --page "$PAGE" --force --dry-run ;;
             test)     python -m autopilot.run --page "$PAGE" --force --dry-run ;;
             post-now) python -m autopilot.run --page "$PAGE" --force ;;
             *)        python -m autopilot.run ;;
           esac
+
+      - name: Show what happened
+        if: always()
+        run: python -m autopilot.run --summary >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: Keep the videos for 5 days
         if: steps.check.outputs.due == 'true'
@@ -84,5 +89,5 @@ jobs:
         run: |
           git config user.name "reel-autopilot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/data/state.json
+          git add docs/data/state.json data 2>/dev/null || git add docs/data/state.json
           git diff --cached --quiet || (git commit -q -m "autopilot: update state" && git pull -q --rebase && git push -q)

@@ -8,7 +8,7 @@ import requests
 from .common import env
 
 V = "v21.0"
-G = f"https://graph.facebook.com/{V}"
+G = env("GRAPH_BASE", "https://graph.facebook.com") + f"/{V}"   # GRAPH_BASE is only changed by the tests
 _accounts = None
 
 
@@ -80,7 +80,7 @@ def post_reel(page, mp4, caption):
             break
         if s.get("status_code") in ("ERROR", "EXPIRED"):
             raise RuntimeError(f"Instagram rejected the video: {s.get('status')}")
-        time.sleep(10)
+        time.sleep(float(env("POLL_SECONDS", "10")))
     else:
         raise RuntimeError("Instagram took too long to process the video")
     media_id = _post(f"{ig}/media_publish", token, creation_id=cid)["id"]
@@ -105,17 +105,18 @@ def page_stats(page):
     info = _get(ig, token, fields="followers_count,media_count,username")
     media = _get(f"{ig}/media", token, limit=60, fields="id,timestamp,media_product_type,permalink,like_count,comments_count").get("data", [])
     now = datetime.now(timezone.utc)
-    week, prev, reels, per_media = 0, 0, 0, {}
+    week, prev, month, reels, per_media = 0, 0, 0, 0, {}
     for m in media:
         ts = datetime.strptime(m["timestamp"], "%Y-%m-%dT%H:%M:%S%z")
         age = now - ts
-        if m.get("media_product_type") != "REELS" or age > timedelta(days=14):
+        if m.get("media_product_type") != "REELS" or age > timedelta(days=30):
             continue
         v = _views(m["id"], token) or 0
         per_media[m["id"]] = {"views": v, "likes": m.get("like_count", 0), "comments": m.get("comments_count", 0)}
+        month += v
         if age <= timedelta(days=7):
             week += v
             reels += 1
-        else:
+        elif age <= timedelta(days=14):
             prev += v
-    return {"followers": info.get("followers_count"), "views7": week, "prev7": prev, "reels7": reels, "media": per_media}
+    return {"followers": info.get("followers_count"), "views7": week, "prev7": prev, "views30": month, "reels7": reels, "media": per_media}

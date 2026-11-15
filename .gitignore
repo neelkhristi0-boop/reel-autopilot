@@ -5,3 +5,4 @@ composer/public/voice*
 composer/props.json
 *.pyc
 .env
+composer/public/clip.mp4

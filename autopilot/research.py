@@ -4,6 +4,8 @@ import urllib.parse
 
 import feedparser
 
+from .common import env
+
 LANG = {"IN": ("en-IN", "IN:en"), "US": ("en-US", "US:en")}
 
 
@@ -18,7 +20,7 @@ def gather(page, limit=30):
     urls = []
     for q in page.get("news_queries") or []:
         urls.append(
-            "https://news.google.com/rss/search?q="
+            env("NEWS_BASE", "https://news.google.com") + "/rss/search?q="
             + urllib.parse.quote(q + " when:2d")
             + f"&hl={hl}&gl={region}&ceid={ceid}"
         )

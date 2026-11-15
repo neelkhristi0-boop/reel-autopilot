@@ -20,6 +20,8 @@ const fit = (s: string, big: number, small: number, at = 12, to = 70) =>
   Math.round(interpolate(s.length, [at, to], [big, small], {extrapolateLeft: "clamp", extrapolateRight: "clamp"}));
 const fmt = (n: number) => (Math.abs(n) >= 1000 ? Math.round(n).toLocaleString("en-IN") : Number.isInteger(n) ? String(n) : n.toFixed(1));
 
+const anim = (v: number, r: number) => (Number.isInteger(v) ? Math.round(v * r) : v * r); // whole numbers count up in whole steps
+
 // t = seconds since the beat started, len = beat length in seconds
 type SP = {t: number; len: number; accent: string};
 const useIn = (t: number, delay = 0, snappy = true) => {
@@ -42,7 +44,7 @@ const NumberScene: React.FC<SP & {s: Extract<Scene, {type: "number"}>}> = ({t, l
   const p = useIn(t);
   const r = Math.min(1, Math.max(0, t / Math.min(1.2, len * 0.6)));
   const eased = 1 - Math.pow(1 - r, 3);
-  const txt = `${s.prefix ?? ""}${fmt(s.value * eased)}${s.suffix ?? ""}`;
+  const txt = `${s.prefix ?? ""}${fmt(anim(s.value, eased))}${s.suffix ?? ""}`;
   return (
     <div style={{textAlign: "center", width: 960}}>
       <div style={{fontSize: fit(txt, 300, 150, 4, 12), fontWeight: 800, letterSpacing: -6, color: accent, transform: `scale(${0.8 + 0.2 * p})`, opacity: p, fontVariantNumeric: "tabular-nums"}}>{txt}</div>
@@ -62,7 +64,7 @@ const Compare: React.FC<SP & {s: Extract<Scene, {type: "compare"}>}> = ({t, len,
         const h = Math.max(24, 560 * (Math.abs(b.value) / max)) * Math.min(1, g);
         return (
           <div key={i} style={{width: 330, textAlign: "center", opacity: Math.min(1, g * 2)}}>
-            <div style={{fontSize: 84, fontWeight: 800, color: b.color === "#6b7280" ? "#fff" : b.color, fontVariantNumeric: "tabular-nums"}}>{fmt(b.value * Math.min(1, g))}{s.unit ?? ""}</div>
+            <div style={{fontSize: 84, fontWeight: 800, color: b.color === "#6b7280" ? "#fff" : b.color, fontVariantNumeric: "tabular-nums"}}>{fmt(anim(b.value, Math.min(1, g)))}{s.unit ?? ""}</div>
             <div style={{height: h, background: b.color, borderRadius: "18px 18px 0 0", marginTop: 16}} />
             <div style={{fontSize: fit(b.label, 50, 36, 8, 30), fontWeight: 600, marginTop: 22, lineHeight: 1.15, height: 120}}>{b.label}</div>
           </div>

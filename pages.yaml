@@ -13,6 +13,7 @@ pages:
     voice: en-IN-PrabhatNeural
     accent: "#f59e0b"
     times: ["09:30", "19:30"]
+    target_views: 1000000        # 30-day views goal, shown on the dashboard
     niche: >
       Business stories and insider facts about famous Indian and global companies and founders
       (how they started, the one decision that changed everything, collapses, comebacks).
@@ -104,3 +105,16 @@ pages:
     news_queries: []
     news_region: IN
     evergreen: []
+
+  # A CLIPPING page: give it a Google Drive folder of long videos YOU own (or have permission to use).
+  # It cuts one captioned clip per time slot and never reuses the same part.
+  - id: clips-page
+    name: Clips page (template)
+    instagram: ""
+    enabled: false
+    mode: clips
+    drive_folder: ""        # folder link, shared as "Anyone with the link can view"
+    clip_seconds: [20, 45]
+    accent: "#22c55e"
+    times: ["11:00", "17:00", "21:30"]
+    niche: Describe what the source videos are about.

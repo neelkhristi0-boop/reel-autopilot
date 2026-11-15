@@ -40,22 +40,57 @@ async def _edge(text, voice, mp3):
     return words
 
 
-def _speak(text, voice, mp3):
-    """Returns word timings relative to this clip (may be empty)."""
-    if os.environ.get("AUTOPILOT_FAKE_VOICE"):  # tests only: silence at speaking pace
-        secs = max(1.0, len(text.split()) / 2.7)
-        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", str(secs), str(mp3)], check=True)
-        return []
-    for attempt in range(3):
+PIPER_URL = "https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-lessac-medium.tar.gz"
+
+
+def _piper(text, wav):
+    """Offline backup voice (English). Downloads its model once per run."""
+    import glob
+    import tarfile
+    import urllib.request
+    import wave
+    from piper import PiperVoice
+    d = Path(os.environ.get("PIPER_DIR") or Path.home() / ".cache" / "reel-autopilot" / "piper")
+    if not glob.glob(str(d / "*.onnx")):
+        d.mkdir(parents=True, exist_ok=True)
+        tgz = d / "voice.tar.gz"
+        urllib.request.urlretrieve(PIPER_URL, tgz)
+        with tarfile.open(tgz) as t:
+            t.extractall(d)
+    global _piper_voice
+    if _piper_voice is None:
+        _piper_voice = PiperVoice.load(glob.glob(str(d / "*.onnx"))[0])
+    with wave.open(str(wav), "wb") as w:
+        _piper_voice.synthesize_wav(text, w)
+
+
+_piper_voice = None
+used = set()  # which voice engines this run actually used, for the dashboard
+
+
+def _speak(text, voice, out):
+    """Writes speech to `out` (any audio format ffmpeg reads). Returns word timings relative to the clip (may be empty).
+    Order: Edge neural voice -> offline Piper voice (English) -> Google voice."""
+    engine = os.environ.get("VOICE_ENGINE", "edge")
+    if engine == "edge":
+        for attempt in range(3):
+            try:
+                words = asyncio.run(_edge(text, voice, out))
+                if Path(out).stat().st_size > 1000:
+                    used.add("edge")
+                    return words
+            except Exception as e:
+                print(f"  edge voice attempt {attempt + 1} failed: {e}")
+    if not voice.startswith("hi-"):
         try:
-            words = asyncio.run(_edge(text, voice, mp3))
-            if Path(mp3).stat().st_size > 1000:
-                return words
+            _piper(text, out)
+            used.add("piper")
+            return []
         except Exception as e:
-            print(f"  edge voice attempt {attempt + 1} failed: {e}")
-    from gtts import gTTS  # fallback voice, no word timings
-    lang = "hi" if voice.startswith("hi-") else "en"
-    gTTS(text, lang=lang, tld="co.in").save(str(mp3))
+            print(f"  piper voice failed: {e}")
+    from gtts import gTTS
+    gTTS(text, lang="hi" if voice.startswith("hi-") else "en", tld="co.in").save(str(out))
+    used.add("google")
     return []
 
 
@@ -67,9 +102,9 @@ def make(beats, voice, workdir, out_audio):
     silence = workdir / "gap.wav"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono", "-t", str(GAP), str(silence)], check=True)
     for i, b in enumerate(beats):
-        mp3, wav = workdir / f"b{i}.mp3", workdir / f"b{i}.wav"
-        timed = _speak(b["say"], voice, mp3)
-        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(mp3), "-ar", "44100", "-ac", "1", str(wav)], check=True)
+        raw, wav = workdir / f"b{i}.audio", workdir / f"b{i}.wav"
+        timed = _speak(b["say"], voice, raw)
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-ar", "44100", "-ac", "1", str(wav)], check=True)
         d = _dur(wav)
         rbeats.append({"start": len(words), "scene": b["scene"], "key": b.get("key", "")})
         if timed:

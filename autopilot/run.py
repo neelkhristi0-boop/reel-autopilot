@@ -11,7 +11,7 @@ import shutil
 import traceback
 from datetime import datetime, timedelta
 
-from . import instagram, research, script, voice
+from . import clips, instagram, research, script, voice
 from .common import COMPOSER, OUT, env, iso, load_config, load_state, now_utc, save_state
 from .render import render
 
@@ -48,12 +48,15 @@ def plan(cfg, state):
     for page in cfg["pages"]:
         ps = state["pages"].setdefault(page["id"], {})
         ps.update({"name": page["name"], "instagram": page.get("instagram", ""), "enabled": bool(page.get("enabled")),
-                   "times": page.get("times", []), "accent": page.get("accent", "#3b82f6")})
+                   "times": page.get("times", []), "accent": page.get("accent", "#3b82f6"),
+                   "mode": page.get("mode", "explainer"), "target": page.get("target_views")})
         needs = []
         if not page.get("instagram"):
             needs.append("Instagram handle in pages.yaml")
         if not page.get("enabled"):
             needs.append("Set enabled: true in pages.yaml")
+        if page.get("mode") == "clips" and not page.get("drive_folder"):
+            needs.append("Google Drive folder link (drive_folder) in pages.yaml")
         ps["needs"] = needs
         if not page.get("enabled"):
             continue
@@ -89,30 +92,46 @@ def refresh_stats(cfg, state):
     state["stats_at"] = iso()
 
 
+def learn(page, state):
+    """The daily lesson: which of this page's reels won and lost, fed back into the next script or clip choice."""
+    done = [r for r in state["reels"] if r["page"] == page["id"] and r["status"] == "posted" and r.get("views") is not None]
+    if len(done) < 4:
+        return ""
+    done.sort(key=lambda r: r["views"], reverse=True)
+    line = lambda r: f'- {r["views"]} views: "{r.get("hook") or r.get("title")}" ({r.get("seconds", "?")}s)'
+    return "WINNERS:\n" + "\n".join(line(r) for r in done[:5]) + "\nLOSERS:\n" + "\n".join(line(r) for r in done[-3:])
+
+
 def make_one(page, slot, state, dry_run):
     rid = slot.replace("|", "_").replace(":", "")
     rec = {"id": rid, "slot": slot, "page": page["id"], "status": "researching", "created": iso(), "title": "", "error": ""}
     state["reels"].append(rec)
     try:
-        print(f"[{page['id']}] researching")
-        items = research.gather(page)
-        history = [r["topic"] for r in state["reels"] if r["page"] == page["id"] and r.get("topic")]
-        rec["status"] = "scripting"
-        s = script.write(page, items, history)
-        rec.update({"title": s["title"], "topic": s["topic"], "sources": s["sources"], "trending_items": len(items)})
-        print(f"[{page['id']}] topic: {s['topic']}")
-        rec["status"] = "voicing"
-        words, beats, duration = voice.make(s["beats"], page.get("voice", "en-IN-PrabhatNeural"), OUT / f"{rid}_work", COMPOSER / "public" / "voice.mp3")
-        rec["status"] = "rendering"
-        rec["seconds"] = duration
-        handle = "@" + page["instagram"] if page.get("instagram") else page["name"]
-        mp4 = render(rid, words, beats, duration, page.get("accent", "#3b82f6"), handle)
-        shutil.rmtree(OUT / f"{rid}_work", ignore_errors=True)
-        caption = s["caption"] + "\n\n" + " ".join("#" + h for h in s["hashtags"])
+        if not dry_run:
+            instagram.account(page)  # fail fast, before any rendering, if the page cannot be posted to
+        learned = learn(page, state)
+        if page.get("mode") == "clips":
+            print(f"[{page['id']}] clipping")
+            mp4, caption, rec["hook"] = clips.make(page, rec, state, learned)
+        else:
+            print(f"[{page['id']}] researching")
+            items = research.gather(page)
+            history = [r["topic"] for r in state["reels"] if r["page"] == page["id"] and r.get("topic")]
+            rec["status"] = "scripting"
+            s = script.write(page, items, history, learned)
+            rec.update({"title": s["title"], "topic": s["topic"], "sources": s["sources"], "trending_items": len(items), "hook": s["beats"][0]["say"]})
+            print(f"[{page['id']}] topic: {s['topic']} ({len(items)} trending items read)")
+            rec["status"] = "voicing"
+            words, beats, duration = voice.make(s["beats"], page.get("voice", "en-IN-PrabhatNeural"), OUT / f"{rid}_work", COMPOSER / "public" / "voice.mp3")
+            rec.update({"status": "rendering", "seconds": duration, "voice": "+".join(sorted(voice.used))})
+            handle = "@" + page["instagram"] if page.get("instagram") else page["name"]
+            mp4 = render(rid, words, beats, duration, page.get("accent", "#3b82f6"), handle)
+            shutil.rmtree(OUT / f"{rid}_work", ignore_errors=True)
+            caption = s["caption"] + "\n\n" + " ".join("#" + h for h in s["hashtags"])
         (OUT / f"{rid}.txt").write_text(caption, encoding="utf-8")
         if dry_run:
             rec["status"] = "made"
-            print(f"[{page['id']}] made {mp4} (dry run, not posted)")
+            print(f"[{page['id']}] made {mp4} (not posted)")
             return
         rec["status"] = "posting"
         rec["media_id"], rec["permalink"] = instagram.post_reel(page, mp4, caption)
@@ -132,8 +151,14 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--page")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--summary", action="store_true")
     a = ap.parse_args()
     cfg, state = load_config(), load_state()
+    if a.summary:  # shown on the GitHub run page
+        print("| Page | Reel | Status | Voice | Note |\n|---|---|---|---|---|")
+        for r in state["reels"][-8:]:
+            print(f"| {r['page']} | {r.get('title', '')} | {r['status']} | {r.get('voice', '')} | {r.get('permalink') or r.get('error', '')} |")
+        return
     slots = due_slots(cfg, state, a.page, a.force)
     if a.check:
         last = state.get("stats_at")
@@ -147,7 +172,7 @@ def main():
             with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                 f.write(f"due={'true' if slots else 'false'}\n")
         return
-    if not env("GEMINI_API_KEY"):
+    if not env("GEMINI_API_KEY") and not env("AUTOPILOT_SELFTEST"):
         raise SystemExit("GEMINI_API_KEY is not set: add it as a repository secret")
     for page, slot in slots:
         make_one(page, slot, state, a.dry_run)
