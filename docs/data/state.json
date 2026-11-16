@@ -194,10 +194,6 @@
  ],
  "planned": [
   {
-   "page": "insider-story",
-   "at": "2026-11-16T04:00:00Z"
-  },
-  {
    "page": "prospect-engitech",
    "at": "2026-11-16T07:00:00Z"
   },
@@ -222,6 +218,6 @@
   "Add the GEMINI_API_KEY secret in the GitHub repo settings",
   "Add the META_TOKEN secret in the GitHub repo settings"
  ],
- "updated": "2026-11-16T02:40:59Z",
+ "updated": "2026-11-16T10:57:46Z",
  "stats_at": null
 }
