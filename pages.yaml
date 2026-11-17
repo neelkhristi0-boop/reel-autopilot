@@ -28,6 +28,21 @@ pages:
       - How Maggi came back after the ban
       - How Royal Enfield was saved from shutting down
       - The Tata Nano mistake
+      - How Nirma beat Surf with 3 rupee detergent sold from a bicycle
+      - How Titan fought the Licence Raj and then created Tanishq
+      - How Thyrocare's frugal lab model became a big IPO
+      - How one missed Diwali bus home created redBus
+      - How cash on delivery made India trust Flipkart
+      - How Zomato started as scanned office canteen menus
+      - How the RBI order wiped out Paytm's market value in two days
+      - Why PepperTap died despite 50 million dollars of funding
+      - Why eBay failed in India
+      - How FedEx's founder saved the company at a blackjack table
+      - How Steve Jobs saved Apple from bankruptcy in 1997
+      - How Airbnb survived by selling cereal boxes
+      - How LEGO nearly went bankrupt and came back
+      - How Marvel bet its own heroes to start a film studio
+      - How the Qwikster mistake cost Netflix 800,000 subscribers
 
   - id: prospect-engitech
     name: Prospect Engitech
@@ -55,6 +70,20 @@ pages:
       - What G-code actually tells the machine
       - Why aluminium 6061 is the most machined metal
       - How a job shop checks a part, from vernier to CMM
+      - Every VMC is a CNC, but not every CNC is a VMC
+      - Why heavy parts are turned on vertical lathes
+      - The over-tolerancing trap that doubles a CNC quote
+      - How ISO 2768 general tolerances cut machining cost
+      - Bilateral versus unilateral tolerances for shafts and holes
+      - Ra 3.2, 1.6 and 0.8 surface finish explained
+      - Why a tight tolerance does not mean a smooth finish
+      - Aluminium 6061 versus 7075, which to choose
+      - Stainless 303 versus 304 versus 316L for machining
+      - Carbide inserts versus HSS tools
+      - How to read an insert code like CNMG 120408
+      - Why a milled pocket cannot have a sharp inside corner
+      - Minimum wall thickness before a part starts to chatter
+      - Through holes versus blind tapped holes
 
   - id: explain-lab
     name: The Explain Lab
